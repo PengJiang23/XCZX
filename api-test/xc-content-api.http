@@ -1,3 +1,7 @@
+GET {{content_host}}/content/course/1
+Accept: application/json
+
+###
 ###
 GET http://localhost:8081/hello1
 
@@ -13,6 +17,13 @@ Content-Type: application/json
   "courseName": "1",
   "publishStatus": "null"
 }
+
+
+###
+GET {{content_host}}/content/teachplan/117/tree-nodes
+Content-Type: application/json
+
+
 
 
 
