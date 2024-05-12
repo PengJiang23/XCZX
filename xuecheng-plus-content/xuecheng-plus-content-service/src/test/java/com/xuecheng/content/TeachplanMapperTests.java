@@ -32,9 +32,13 @@ public class TeachplanMapperTests {
     @Test
     public void testCourseBaseMapper() {
 
-        List<TeachplanDto> teachplanDtos = teachplanMapper.selectTreeNodes(117L);
+        List<TeachplanDto> teachplanDtos = teachplanMapper.selectTreeNodes(25L);
         for (TeachplanDto teachplanDto : teachplanDtos) {
             System.err.println(teachplanDto.getPname());
+            for (TeachplanDto teachPlanTreeNode : teachplanDto.getTeachPlanTreeNodes()) {
+                System.err.println(teachPlanTreeNode.getPname());
+            }
+
         }
     }
 }

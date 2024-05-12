@@ -1,5 +1,7 @@
 package com.xuecheng.base.exception;
 
+import java.util.Collections;
+
 /**
  * @author Mr.M
  * @version 1.0
@@ -9,6 +11,7 @@ package com.xuecheng.base.exception;
 public class XueChengPlusException extends RuntimeException {
 
     private String errMessage;
+    private Integer errCode = 0;
 
     public XueChengPlusException() {
     }
@@ -19,16 +22,31 @@ public class XueChengPlusException extends RuntimeException {
 
     }
 
+    public XueChengPlusException(String message, Integer errCode) {
+        super(message);
+        this.errMessage = message;
+        this.errCode = errCode;
+    }
+
     public String getErrMessage() {
         return errMessage;
+    }
+    public Integer getErrorCode() {
+        return errCode;
     }
 
     public void setErrMessage(String errMessage) {
         this.errMessage = errMessage;
     }
+    public void setErrorCode(Integer errCode) {
+        this.errCode = errCode;
+    }
 
     public static void cast(String message){
         throw new XueChengPlusException(message);
+    }
+    public static void cast(String message, Integer errCode){
+        throw new XueChengPlusException(message, errCode);
     }
     public static void cast(CommonError error){
         throw new XueChengPlusException(error.getErrMessage());
