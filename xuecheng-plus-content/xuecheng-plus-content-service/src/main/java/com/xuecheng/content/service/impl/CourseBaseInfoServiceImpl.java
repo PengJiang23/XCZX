@@ -5,16 +5,12 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xuecheng.base.exception.XueChengPlusException;
 import com.xuecheng.base.model.PageParams;
 import com.xuecheng.base.model.PageResult;
-import com.xuecheng.content.mapper.CourseBaseMapper;
-import com.xuecheng.content.mapper.CourseCategoryMapper;
-import com.xuecheng.content.mapper.CourseMarketMapper;
+import com.xuecheng.content.mapper.*;
 import com.xuecheng.content.model.dto.AddCourseDto;
 import com.xuecheng.content.model.dto.CourseBaseInfoDto;
 import com.xuecheng.content.model.dto.EditCourseDto;
 import com.xuecheng.content.model.dto.QueryCourseParamsDto;
-import com.xuecheng.content.model.po.CourseBase;
-import com.xuecheng.content.model.po.CourseCategory;
-import com.xuecheng.content.model.po.CourseMarket;
+import com.xuecheng.content.model.po.*;
 import com.xuecheng.content.service.CourseBaseInfoService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -25,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Mr.M
@@ -36,13 +33,23 @@ import java.util.List;
 @Service
 public class CourseBaseInfoServiceImpl implements CourseBaseInfoService {
     @Autowired
-    CourseBaseMapper courseBaseMapper;
+    private CourseBaseMapper courseBaseMapper;
 
     @Autowired
-    CourseMarketMapper courseMarketMapper;
+    private CourseMarketMapper courseMarketMapper;
 
     @Autowired
-    CourseCategoryMapper courseCategoryMapper;
+    private CourseCategoryMapper courseCategoryMapper;
+
+    @Autowired
+    private CourseTeacherMapper courseTeacherMapper;
+
+    @Autowired
+    private TeachplanMediaMapper teachplanMediaMapper;
+
+    @Autowired
+    private TeachplanMapper teachplanMapper;
+
 
     @Override
     public PageResult<CourseBase> queryCourseBaseList(PageParams pageParams, QueryCourseParamsDto courseParamsDto) {
@@ -233,7 +240,7 @@ public class CourseBaseInfoServiceImpl implements CourseBaseInfoService {
         //更新营销信息
         //todo:更新营销信息
         CourseMarket courseMarket = courseMarketMapper.selectById(courseId);
-        if(courseMarket == null){
+        if (courseMarket == null) {
             courseMarket = new CourseMarket();
         }
         courseMarket.setId(courseId);
@@ -248,6 +255,47 @@ public class CourseBaseInfoServiceImpl implements CourseBaseInfoService {
     }
 
 
+    @Transactional
+    public void deleteInfo(Long id) {
+
+        // 删除本机构的课程基本信息；如果market存在则删除
+        // 然后删除该课程下的老师list
+        // 删除该课程对应的计划，存在则遍历其中的每个章节并将对应的media删除
+        CourseBase courseBase = courseBaseMapper.selectById(id);
+        if(!courseBase.getCompanyId().equals(1232141425L)){
+            XueChengPlusException.cast("本机构只能删除本机构课程");
+        }
+
+        if(courseBase != null){
+            courseBaseMapper.deleteById(courseBase);
+        }
+
+        CourseMarket courseMarket = courseMarketMapper.selectOne(new LambdaQueryWrapper<CourseMarket>().eq(CourseMarket::getId, id));
+        if(courseMarket != null){
+            courseMarketMapper.deleteById(courseMarket);
+        }
+
+        List<CourseTeacher> courseTeachers = courseTeacherMapper.selectList(new LambdaQueryWrapper<CourseTeacher>().eq(CourseTeacher::getCourseId, id));
+        if(courseTeachers.size() != 0){
+
+            courseTeacherMapper.deleteBatchIds(courseTeachers.stream()
+                    .map(CourseTeacher::getId)
+                    .collect(Collectors.toList()));
+        }
 
 
+        List<Teachplan> teachplans = teachplanMapper.selectList(new LambdaQueryWrapper<Teachplan>().eq(Teachplan::getCourseId, id));
+        if(teachplans != null){
+            for (Teachplan teachplan : teachplans) {
+                teachplanMapper.deleteById(teachplan);
+                if (teachplan.getMediaType()!=null)
+                {
+                    teachplanMediaMapper.delete(new LambdaQueryWrapper<TeachplanMedia>().eq(TeachplanMedia::getCourseId, teachplan.getCourseId()).eq(TeachplanMedia::getTeachplanId,teachplan.getId()));
+
+                }
+            }
+        }
+
+
+    }
 }
