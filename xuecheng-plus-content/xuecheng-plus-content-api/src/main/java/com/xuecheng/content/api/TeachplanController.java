@@ -8,6 +8,7 @@ import com.xuecheng.content.service.TeachplanService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,7 +21,8 @@ public class TeachplanController {
     @Autowired
     TeachplanService teachplanService;
 
-
+    @Value("${test.name}")
+    String test;
 
 
     @ApiOperation("查询课程计划树型结构")
@@ -57,6 +59,11 @@ public class TeachplanController {
         teachplanService.planMoveUp(teachplanId);
     }
 
+
+    @GetMapping("/hello")
+    public String plan(){
+        return test;
+    }
 
 
 }

@@ -1,10 +1,8 @@
 package com.xuecheng;
 
-import com.spring4all.swagger.EnableSwagger2Doc;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * @author Mr.M
@@ -12,11 +10,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * @description 内容管理服务启动类
  * @date 2023/2/11 15:49
  */
-@EnableSwagger2Doc
 @SpringBootApplication
-@EnableDiscoveryClient
-public class ContentApplication {
+public class GatewayApplication {
     public static void main(String[] args) {
-        SpringApplication.run(ContentApplication.class, args);
+        SpringApplication.run(GatewayApplication.class, args);
     }
 }
