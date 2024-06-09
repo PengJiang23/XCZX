@@ -2,6 +2,7 @@ package com.xuecheng.media.api;
 
 import com.xuecheng.base.model.PageParams;
 import com.xuecheng.base.model.PageResult;
+import com.xuecheng.base.model.RestResponse;
 import com.xuecheng.media.model.dto.QueryMediaParamsDto;
 import com.xuecheng.media.model.dto.UploadFileParamsDto;
 import com.xuecheng.media.model.dto.UploadFileResultDto;
@@ -9,6 +10,7 @@ import com.xuecheng.media.model.po.MediaFiles;
 import com.xuecheng.media.service.MediaFileService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.tomcat.util.http.parser.MediaType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +27,7 @@ import java.io.IOException;
  */
 @Api(value = "媒资文件管理接口", tags = "媒资文件管理接口")
 @RestController
+@Slf4j
 public class MediaFilesController {
 
 
@@ -41,10 +44,9 @@ public class MediaFilesController {
     }
 
 
-
     @ApiOperation("上传图片")
     @RequestMapping(value = "/upload/coursefile")
-    public UploadFileResultDto upload(@RequestPart("filedata")MultipartFile filedata) throws IOException {
+    public UploadFileResultDto upload(@RequestPart("filedata") MultipartFile filedata) throws IOException {
 
         Long companyId = 1232141425L;
         UploadFileParamsDto uploadFileParamsDto = new UploadFileParamsDto();
@@ -59,5 +61,6 @@ public class MediaFilesController {
         UploadFileResultDto uploadFileResultDto = mediaFileService.uploadFile(companyId, uploadFileParamsDto, localFilePath);
         return uploadFileResultDto;
     }
+
 
 }
