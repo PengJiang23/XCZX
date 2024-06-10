@@ -4,6 +4,9 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.xuecheng.content.model.dto.SaveTeachplanDto;
 import com.xuecheng.content.model.dto.TeachplanDto;
 import com.xuecheng.content.model.po.Teachplan;
+import com.xuecheng.content.model.po.TeachplanMedia;
+import com.xuecheng.content.model.vo.TeachPlanMediaVO;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
@@ -27,4 +30,8 @@ public interface TeachplanService extends IService<Teachplan> {
     void planMoveDown(Long teachplanId);
 
     void planMoveUp(Long teachplanId);
+
+    void associationMedia(TeachPlanMediaVO teachPlanMediaVO);
+
+    void associationMediaCancel(String teachplanId, String mediaId);
 }

@@ -4,6 +4,8 @@ package com.xuecheng.content.api;
 import com.google.j2objc.annotations.AutoreleasePool;
 import com.xuecheng.content.model.dto.SaveTeachplanDto;
 import com.xuecheng.content.model.dto.TeachplanDto;
+import com.xuecheng.content.model.po.TeachplanMedia;
+import com.xuecheng.content.model.vo.TeachPlanMediaVO;
 import com.xuecheng.content.service.TeachplanService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -65,5 +67,18 @@ public class TeachplanController {
         return test;
     }
 
+
+    @ApiOperation("课程计划与媒资视频绑定")
+    @PostMapping("/teachplan/association/media")
+    public void associationMedia(@RequestBody TeachPlanMediaVO teachPlanMediaVO){
+        teachplanService.associationMedia(teachPlanMediaVO);
+    }
+
+
+    @ApiOperation("课程计划与媒资视频解除绑定")
+    @DeleteMapping("/teachplan/association/media/{teachplanId}/{mediaId}")
+    public void associationMediaCancel(@PathVariable("teachplanId") String teachplanId, @PathVariable("mediaId") String mediaId){
+        teachplanService.associationMediaCancel(teachplanId,mediaId);
+    }
 
 }
