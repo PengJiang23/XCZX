@@ -145,6 +145,7 @@ public class CourseBaseInfoServiceImpl implements CourseBaseInfoService {
         return courseBaseInfo;
     }
 
+
     //查询课程信息
     public CourseBaseInfoDto getCourseBaseInfo(long courseId) {
 

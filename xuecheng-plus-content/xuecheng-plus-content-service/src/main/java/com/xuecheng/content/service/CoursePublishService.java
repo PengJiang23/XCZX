@@ -1,6 +1,7 @@
 package com.xuecheng.content.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.xuecheng.content.model.dto.CoursePreviewDTO;
 import com.xuecheng.content.model.po.CoursePublish;
 
 /**
@@ -13,4 +14,8 @@ import com.xuecheng.content.model.po.CoursePublish;
  */
 public interface CoursePublishService extends IService<CoursePublish> {
 
+    public CoursePreviewDTO GetCourseInfo(Long courseId);
+
+
+    public void commitAudit(Long companyId, Long courseId);
 }

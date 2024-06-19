@@ -18,4 +18,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class CoursePublishPreServiceImpl extends ServiceImpl<CoursePublishPreMapper, CoursePublishPre> implements CoursePublishPreService {
 
+
+
+
+
 }
