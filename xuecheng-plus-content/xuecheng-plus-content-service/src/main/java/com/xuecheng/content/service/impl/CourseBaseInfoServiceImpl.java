@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 /**
  * @author Mr.M
  * @version 1.0
- * @description TODO
+ * 
  * @date 2023/2/12 10:16
  */
 @Slf4j
@@ -60,8 +60,11 @@ public class CourseBaseInfoServiceImpl implements CourseBaseInfoService {
         queryWrapper.like(StringUtils.isNotEmpty(courseParamsDto.getCourseName()), CourseBase::getName, courseParamsDto.getCourseName());
         //根据课程审核状态查询 course_base.audit_status = ?
         queryWrapper.eq(StringUtils.isNotEmpty(courseParamsDto.getAuditStatus()), CourseBase::getAuditStatus, courseParamsDto.getAuditStatus());
-        //todo:按课程发布状态查询
         queryWrapper.eq(StringUtils.isNotEmpty(courseParamsDto.getPublishStatus()), CourseBase::getStatus, courseParamsDto.getPublishStatus());
+
+
+        // 培训机构id找指定数据
+
 
         //创建page分页参数对象，参数：当前页码，每页记录数
         Page<CourseBase> page = new Page<>(pageParams.getPageNo(), pageParams.getPageSize());
@@ -142,6 +145,8 @@ public class CourseBaseInfoServiceImpl implements CourseBaseInfoService {
         //从数据库查询课程的详细信息，包括两部分
         CourseBaseInfoDto courseBaseInfo = getCourseBaseInfo(courseId);
         System.err.println(courseBaseInfo);
+
+        // todo 这里同时生成es索引，但是耦合度高不建议
         return courseBaseInfo;
     }
 
@@ -165,7 +170,6 @@ public class CourseBaseInfoServiceImpl implements CourseBaseInfoService {
         }
 
         //通过courseCategoryMapper查询分类信息，将分类名称放在courseBaseInfoDto对象
-        //todo：课程分类的名称设置到courseBaseInfoDto
         CourseCategory courseCategorySt = courseCategoryMapper.selectById(courseBase.getSt());
         CourseCategory courseCategoryMt = courseCategoryMapper.selectById(courseBase.getMt());
         courseBaseInfoDto.setMtName(courseCategoryMt.getName());
@@ -239,7 +243,6 @@ public class CourseBaseInfoServiceImpl implements CourseBaseInfoService {
             XueChengPlusException.cast("修改课程失败");
         }
         //更新营销信息
-        //todo:更新营销信息
         CourseMarket courseMarket = courseMarketMapper.selectById(courseId);
         if (courseMarket == null) {
             courseMarket = new CourseMarket();

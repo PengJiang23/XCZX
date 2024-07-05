@@ -2,7 +2,10 @@ package com.xuecheng.content.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.xuecheng.base.exception.CommonError;
 import com.xuecheng.base.exception.XueChengPlusException;
+import com.xuecheng.content.config.MultipartSupportConfig;
+import com.xuecheng.content.feignclient.MediaServiceClient;
 import com.xuecheng.content.mapper.CourseBaseMapper;
 import com.xuecheng.content.mapper.CourseMarketMapper;
 import com.xuecheng.content.mapper.CoursePublishMapper;
@@ -17,14 +20,24 @@ import com.xuecheng.content.model.po.CoursePublishPre;
 import com.xuecheng.content.service.CourseBaseInfoService;
 import com.xuecheng.content.service.CoursePublishService;
 import com.xuecheng.content.service.TeachplanService;
+import com.xuecheng.messagesdk.model.po.MqMessage;
+import com.xuecheng.messagesdk.service.MqMessageService;
+import freemarker.template.Configuration;
+import freemarker.template.Template;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
+import org.springframework.web.multipart.MultipartFile;
+import rx.exceptions.Exceptions;
 
+import java.io.*;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -54,6 +67,15 @@ public class CoursePublishServiceImpl extends ServiceImpl<CoursePublishMapper, C
     @Autowired
     private CourseBaseMapper courseBaseMapper;
 
+    @Autowired
+    CoursePublishMapper coursePublishMapper;
+
+    @Autowired
+    MqMessageService mqMessageService;
+
+    @Autowired
+    MediaServiceClient mediaServiceClient;
+
     @Override
     public CoursePreviewDTO GetCourseInfo(Long courseId) {
         CoursePreviewDTO coursePreviewDTO = new CoursePreviewDTO();
@@ -77,7 +99,7 @@ public class CoursePublishServiceImpl extends ServiceImpl<CoursePublishMapper, C
             XueChengPlusException.cast("课程已提交等待审核");
         }
         Long companyIdDB = courseBaseInfo.getCompanyId();
-        if(!companyId.equals(companyIdDB)){
+        if (!companyId.equals(companyIdDB)) {
             XueChengPlusException.cast("只能修改本公司对应的课程");
         }
         String pic = courseBaseInfo.getPic();
@@ -125,5 +147,101 @@ public class CoursePublishServiceImpl extends ServiceImpl<CoursePublishMapper, C
         courseBaseMapper.updateById(courseBase);
 
 
+    }
+
+
+    @Transactional
+    @Override
+    public void commitPublish(Long companyId, Long courseId) {
+
+        // 查询预发布表
+        CoursePublishPre coursePublishPre = coursePublishPreMapper.selectById(courseId);
+        if (coursePublishPre == null) {
+            XueChengPlusException.cast("未提交审核");
+        }
+        //查询课程发布状态
+        String status = coursePublishPre.getStatus();
+        if (!status.equals("202004")) {
+            XueChengPlusException.cast("不允许发布");
+        }
+        // 向课程发布表写数据
+        CoursePublish coursePublish = new CoursePublish();
+        BeanUtils.copyProperties(coursePublishPre, coursePublish);
+        CoursePublish coursePublishObj = coursePublishMapper.selectById(courseId);
+        if (coursePublishObj == null) {
+            coursePublishMapper.insert(coursePublish);
+        } else {
+            coursePublishMapper.updateById(coursePublish);
+        }
+
+        // 向消息表写入数据
+        // 使用sdk/工具类，将mq信息写入数据库
+        saveCoursePublishMessage(courseId);
+
+        // 将预发布表数据删除
+        coursePublishPreMapper.deleteById(courseId);
+
+
+    }
+
+    private void saveCoursePublishMessage(Long courseId) {
+        MqMessage mqMessage = mqMessageService.addMessage("course_publish", String.valueOf(courseId), null, null);
+        if (mqMessage == null) {
+            XueChengPlusException.cast(CommonError.UNKOWN_ERROR);
+        }
+    }
+
+
+    @Override
+    public File generateStaticHtml(Long courseId) {
+        File htmlFile = null;
+        //指定模板的目录
+        try {
+            Configuration configuration = new Configuration(Configuration.getVersion());
+
+            //拿到classpath路径
+            String classpath = this.getClass().getResource("/").getPath();
+            //指定模板的目录
+            configuration.setDirectoryForTemplateLoading(new File(classpath + "/templates/"));
+            //指定编码
+            configuration.setDefaultEncoding("utf-8");
+
+            //得到模板
+            Template template = configuration.getTemplate("course_template.ftl");
+            //准备数据
+            CoursePreviewDTO coursePreviewInfo = this.GetCourseInfo(120L);
+            HashMap<String, Object> map = new HashMap<>();
+            map.put("model", coursePreviewInfo);
+
+            //Template template 模板, Object model 数据
+            String html = FreeMarkerTemplateUtils.processTemplateIntoString(template, map);
+            //输入流
+            InputStream inputStream = IOUtils.toInputStream(html, "utf-8");
+            htmlFile = File.createTempFile("coursepublish", ".html");
+            //输出文件
+            FileOutputStream outputStream = new FileOutputStream(htmlFile);
+            //使用流将html写入文件
+            IOUtils.copy(inputStream, outputStream);
+
+        } catch (Exception e) {
+            log.error("页面静态化出现问题，课程id：{}", courseId, e);
+            throw new RuntimeException(e);
+        }
+        return htmlFile;
+    }
+
+    @Override
+    public void uploadCourseHtml(Long courseId, File file) {
+        try {
+            MultipartFile multipartFile = MultipartSupportConfig.getMultipartFile(file);
+            String upload = mediaServiceClient.upload(multipartFile, "course/" + courseId + ".html");
+            if (upload == null) {
+                log.error("静态资源上传minio失败");
+                XueChengPlusException.cast("静态资源上传minio失败");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            XueChengPlusException.cast("静态资源上传minio失败");
+        }
     }
 }

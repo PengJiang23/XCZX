@@ -20,7 +20,7 @@ import java.util.List;
 /**
  * @author Mr.M
  * @version 1.0
- * @description TODO
+ * 
  * @date 2023/2/11 15:44
  */
 @Api(tags = "课程分类管理接口")

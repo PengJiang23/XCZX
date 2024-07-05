@@ -24,8 +24,7 @@ public class CourseOpenController {
 
     @GetMapping("/course/whole/{courseId}")
     public CoursePreviewDTO getPreviewInfo(@PathVariable("courseId") Long courseId){
-        CoursePreviewDTO coursePreviewDTO = coursePublishService.GetCourseInfo(courseId);
-        return coursePreviewDTO;
+        return coursePublishService.GetCourseInfo(courseId);
     }
 
 }

@@ -13,4 +13,5 @@ import com.xuecheng.content.model.po.CoursePublishPre;
  */
 public interface CoursePublishPreService extends IService<CoursePublishPre> {
 
+
 }

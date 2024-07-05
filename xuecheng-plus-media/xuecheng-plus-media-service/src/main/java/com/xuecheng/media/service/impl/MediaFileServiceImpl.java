@@ -20,6 +20,7 @@ import io.minio.*;
 import io.minio.errors.*;
 import io.minio.messages.DeleteError;
 import io.minio.messages.DeleteObject;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -44,7 +45,7 @@ import java.util.stream.Stream;
 /**
  * @author Mr.M
  * @version 1.0
- * @description TODO
+ * 
  * @date 2022/9/10 8:58
  */
 @Slf4j
@@ -167,6 +168,7 @@ public class MediaFileServiceImpl implements MediaFileService {
       return   mediaFilesMapper.selectById(mediaId);
     }
 
+
     @Transactional
     public MediaFiles addMediaFilesToDb(Long companyId, String fileMd5, UploadFileParamsDto uploadFileParamsDto, String bucket, String objectName) {
         MediaFiles mediaFiles = mediaFilesMapper.selectById(fileMd5);
@@ -211,8 +213,11 @@ public class MediaFileServiceImpl implements MediaFileService {
         }
     }
 
+
+
+
     @Override
-    public UploadFileResultDto uploadFile(Long companyId, UploadFileParamsDto uploadFileParamDto, String localFilePath) {
+    public UploadFileResultDto uploadFile(Long companyId, UploadFileParamsDto uploadFileParamDto, String localFilePath, String objectName) {
 
         // 获取文件拓展名和mimetype  每个上传文件都需要
         // 构造上传的minio的对象
@@ -226,13 +231,15 @@ public class MediaFileServiceImpl implements MediaFileService {
         String extension = filename.substring(filename.lastIndexOf("."));
         String mimeType = getMimeType(extension);
         String fileMd5 = getFileMd5(file);
-        String defaultFolderPath = getDefaultFolderPath();
-        String objectName = defaultFolderPath + fileMd5 + extension;
+
+        if(StringUtils.isEmpty(objectName)){
+            String defaultFolderPath = getDefaultFolderPath();
+            objectName = defaultFolderPath + fileMd5 + extension;
+        }
+
         addMediaFileToMinoIO(localFilePath, objectName, mimeType, bucket_files);
         uploadFileParamDto.setFileSize(file.length());
-
         MediaFiles mediaFiles = currentProxy.addMediaFilesToDb(companyId, fileMd5, uploadFileParamDto, bucket_files, objectName);
-
         UploadFileResultDto uploadFileResultDto = new UploadFileResultDto();
         BeanUtils.copyProperties(mediaFiles, uploadFileResultDto);
         return uploadFileResultDto;
